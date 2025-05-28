@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "連接到米多力除濕機",
+        "description": "為您的米多力除濕機選擇連接類型",
+        "data": {
+          "name": "名稱",
+          "connection_type": "連接類型"
+        }
+      },
+      "serial": {
+        "title": "串口連接設置",
+        "description": "為您的米多力除濕機配置串口連接參數",
+        "data": {
+          "port": "串口端口（例如：/dev/ttyUSB0）",
+          "slave_id": "Modbus 從機 ID（1-32）",
+          "baudrate": "波特率",
+          "bytesize": "位元組大小",
+          "parity": "奇偶校驗",
+          "stopbits": "停止位"
+        }
+      },
+      "tcp": {
+        "title": "TCP 連接設置",
+        "description": "為您的米多力除濕機配置 TCP 連接參數",
+        "data": {
+          "host": "主機",
+          "tcp_port": "TCP 端口",
+          "slave_id": "Modbus 從機 ID（1-32）"
+        }
+      }
+    },
+    "error": {
+      "unknown": "發生未知錯誤",
+      "invalid_slave_id": "從機 ID 必須是 1 到 32 之間的有效數字"
+    },
+    "abort": {
+      "already_configured": "設備已配置"
+    }
+  },
+  "entity": {
+    "humidifier": {
+      "medole_dehumidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "Low": "低速",
+              "Medium": "中速",
+              "High": "高速"
+            }
+          }
+        }
+      }
+    }
+  }
+}

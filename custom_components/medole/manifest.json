@@ -1,0 +1,12 @@
+{
+  "domain": "medole",
+  "name": "Medole",
+  "codeowners": ["@aitjcize"],
+  "config_flow": true,
+  "dependencies": ["modbus"],
+  "documentation": "https://github.com/aitjcize/ha-medole",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/aitjcize/ha-medole/issues",
+  "requirements": ["pymodbus>=3.0.0"],
+  "version": "0.1.0"
+}

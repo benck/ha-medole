@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Medole Dehumidifier",
+        "description": "Select connection type for your Medole Dehumidifier.",
+        "data": {
+          "name": "Name",
+          "connection_type": "Connection Type"
+        }
+      },
+      "serial": {
+        "title": "Serial Connection Settings",
+        "description": "Configure serial connection parameters for your Medole Dehumidifier.",
+        "data": {
+          "port": "Serial Port (e.g., /dev/ttyUSB0)",
+          "slave_id": "Modbus Slave ID (1-32)",
+          "baudrate": "Baudrate",
+          "bytesize": "Byte Size",
+          "parity": "Parity",
+          "stopbits": "Stop Bits"
+        }
+      },
+      "tcp": {
+        "title": "TCP Connection Settings",
+        "description": "Configure TCP connection parameters for your Medole Dehumidifier.",
+        "data": {
+          "host": "Host",
+          "tcp_port": "TCP Port",
+          "slave_id": "Modbus Slave ID (1-32)"
+        }
+      }
+    },
+    "error": {
+      "unknown": "Unexpected error occurred",
+      "invalid_slave_id": "Slave ID must be a valid number between 1 and 32"
+    },
+    "abort": {
+      "already_configured": "Device already configured"
+    }
+  }
+}

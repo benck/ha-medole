@@ -114,14 +114,6 @@ async def async_setup_entry(
         MedoleStatusSensor(name, client, slave_id),
     ]
 
-    # Add second temperature and humidity sensors if available
-    entities.extend(
-        [
-            MedoleTemperatureSensor(name, client, slave_id, 2),
-            MedoleHumiditySensor(name, client, slave_id, 2),
-        ]
-    )
-
     async_add_entities(entities, True)
 
 
@@ -154,7 +146,7 @@ class MedoleTemperatureSensor(MedoleBaseSensor):
         """Initialize the temperature sensor."""
         super().__init__(name, client, slave_id, f"temperature_{sensor_number}")
         self._sensor_number = sensor_number
-        self._attr_name = f"Temperature {sensor_number}"
+        self._attr_name = f"Temperature"
         self._register = (
             REG_TEMPERATURE_1 if sensor_number == 1 else REG_TEMPERATURE_2
         )
@@ -200,7 +192,7 @@ class MedoleHumiditySensor(MedoleBaseSensor):
         """Initialize the humidity sensor."""
         super().__init__(name, client, slave_id, f"humidity_{sensor_number}")
         self._sensor_number = sensor_number
-        self._attr_name = f"Humidity {sensor_number}"
+        self._attr_name = f"Humidity"
         self._register = (
             REG_HUMIDITY_1 if sensor_number == 1 else REG_HUMIDITY_2
         )

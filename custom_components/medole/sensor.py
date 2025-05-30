@@ -36,7 +36,6 @@ from .const import (
     STATUS_ROOM_TEMP_ERROR,
     STATUS_WATER_FULL_ERROR,
 )
-from .modbus import async_read_register
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,17 +49,16 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][config_entry.entry_id]
     config = data["config"]
     client = data["client"]
-    slave_id = data["slave_id"]
 
     name = config[CONF_NAME]
 
     entities = [
-        MedoleTemperatureSensor(hass, name, client, slave_id, 1),
-        MedoleHumiditySensor(hass, name, client, slave_id, 1),
-        MedolePipeTemperatureSensor(hass, name, client, slave_id),
-        MedoleFanOperationHoursSensor(hass, name, client, slave_id),
-        MedoleFanAlarmHoursSensor(hass, name, client, slave_id),
-        MedoleStatusSensor(hass, name, client, slave_id),
+        MedoleTemperatureSensor(hass, name, client, 1),
+        MedoleHumiditySensor(hass, name, client, 1),
+        MedolePipeTemperatureSensor(hass, name, client),
+        MedoleFanOperationHoursSensor(hass, name, client),
+        MedoleFanAlarmHoursSensor(hass, name, client),
+        MedoleStatusSensor(hass, name, client),
     ]
     async_add_entities(entities, True)
 
@@ -70,11 +68,10 @@ class MedoleBaseSensor(SensorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, hass, name, client, slave_id, sensor_type):
+    def __init__(self, hass, name, client, sensor_type):
         """Initialize the sensor."""
         self.hass = hass
         self._client = client
-        self._slave_id = slave_id
         self._attr_unique_id = f"{name}_{sensor_type}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, f"{name}_humidifier")},
@@ -91,11 +88,9 @@ class MedoleTemperatureSensor(MedoleBaseSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
-    def __init__(self, hass, name, client, slave_id, sensor_number):
+    def __init__(self, hass, name, client, sensor_number):
         """Initialize the temperature sensor."""
-        super().__init__(
-            hass, name, client, slave_id, f"temperature_{sensor_number}"
-        )
+        super().__init__(hass, name, client, f"temperature_{sensor_number}")
         self._sensor_number = sensor_number
         self._attr_name = "Temperature"
         self._register = (
@@ -104,9 +99,7 @@ class MedoleTemperatureSensor(MedoleBaseSensor):
 
     async def async_update(self) -> None:
         """Update the state of the sensor."""
-        result = await async_read_register(
-            self.hass, self._client, self._register, self._slave_id
-        )
+        result = await self._client.async_read_register(self._register)
 
         if result:
             # Temperature format: Hi Byte = decimal, Lo Byte = integer
@@ -125,11 +118,9 @@ class MedoleHumiditySensor(MedoleBaseSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(self, hass, name, client, slave_id, sensor_number):
+    def __init__(self, hass, name, client, sensor_number):
         """Initialize the humidity sensor."""
-        super().__init__(
-            hass, name, client, slave_id, f"humidity_{sensor_number}"
-        )
+        super().__init__(hass, name, client, f"humidity_{sensor_number}")
         self._sensor_number = sensor_number
         self._attr_name = "Humidity"
         self._register = (
@@ -138,9 +129,7 @@ class MedoleHumiditySensor(MedoleBaseSensor):
 
     async def async_update(self) -> None:
         """Update the state of the sensor."""
-        result = await async_read_register(
-            self.hass, self._client, self._register, self._slave_id
-        )
+        result = await self._client.async_read_register(self._register)
 
         if result:
             self._attr_native_value = result.registers[0]
@@ -155,16 +144,14 @@ class MedolePipeTemperatureSensor(MedoleBaseSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
-    def __init__(self, hass, name, client, slave_id):
+    def __init__(self, hass, name, client):
         """Initialize the pipe temperature sensor."""
-        super().__init__(hass, name, client, slave_id, "pipe_temperature")
+        super().__init__(hass, name, client, "pipe_temperature")
         self._attr_name = "Pipe Temperature"
 
     async def async_update(self) -> None:
         """Update the state of the sensor."""
-        result = await async_read_register(
-            self.hass, self._client, REG_PIPE_TEMPERATURE, self._slave_id
-        )
+        result = await self._client.async_read_register(REG_PIPE_TEMPERATURE)
 
         if result:
             self._attr_native_value = result.registers[0] / 10.0
@@ -179,16 +166,14 @@ class MedoleFanOperationHoursSensor(MedoleBaseSensor):
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfTime.HOURS
 
-    def __init__(self, hass, name, client, slave_id):
+    def __init__(self, hass, name, client):
         """Initialize the fan operation hours sensor."""
-        super().__init__(hass, name, client, slave_id, "fan_operation_hours")
+        super().__init__(hass, name, client, "fan_operation_hours")
         self._attr_name = "Fan Operation Hours"
 
     async def async_update(self) -> None:
         """Update the state of the sensor."""
-        result = await async_read_register(
-            self.hass, self._client, REG_FAN_OPERATION_HOURS, self._slave_id
-        )
+        result = await self._client.async_read_register(REG_FAN_OPERATION_HOURS)
 
         if result:
             self._attr_native_value = result.registers[0]
@@ -203,16 +188,14 @@ class MedoleFanAlarmHoursSensor(MedoleBaseSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTime.HOURS
 
-    def __init__(self, hass, name, client, slave_id):
+    def __init__(self, hass, name, client):
         """Initialize the fan alarm hours sensor."""
-        super().__init__(hass, name, client, slave_id, "fan_alarm_hours")
+        super().__init__(hass, name, client, "fan_alarm_hours")
         self._attr_name = "Fan Alarm Hours"
 
     async def async_update(self) -> None:
         """Update the state of the sensor."""
-        result = await async_read_register(
-            self.hass, self._client, REG_FAN_ALARM_HOURS, self._slave_id
-        )
+        result = await self._client.async_read_register(REG_FAN_ALARM_HOURS)
 
         if result:
             self._attr_native_value = result.registers[0]
@@ -223,9 +206,9 @@ class MedoleFanAlarmHoursSensor(MedoleBaseSensor):
 class MedoleStatusSensor(MedoleBaseSensor):
     """Representation of a Medole Status sensor."""
 
-    def __init__(self, hass, name, client, slave_id):
+    def __init__(self, hass, name, client):
         """Initialize the status sensor."""
-        super().__init__(hass, name, client, slave_id, "status")
+        super().__init__(hass, name, client, "status")
         self._attr_name = "Status"
         self._status_value = None
 
@@ -257,9 +240,7 @@ class MedoleStatusSensor(MedoleBaseSensor):
 
     async def async_update(self) -> None:
         """Update the state of the sensor."""
-        result = await async_read_register(
-            self.hass, self._client, REG_OPERATION_STATUS, self._slave_id
-        )
+        result = await self._client.async_read_register(REG_OPERATION_STATUS)
 
         if result:
             self._status_value = result.registers[0]

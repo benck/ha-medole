@@ -31,7 +31,8 @@ from .const import (
     STATUS_COMPRESSOR_ON,
     STATUS_FAN_ON,
 )
-from .modbus import async_read_register, async_write_register
+
+# No need to import modbus functions as we'll use the client methods directly
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,12 +55,11 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][config_entry.entry_id]
     config = data["config"]
     client = data["client"]
-    slave_id = data["slave_id"]
 
     name = config[CONF_NAME]
 
     async_add_entities(
-        [MedoleDehumidifierHumidifier(hass, name, client, slave_id)],
+        [MedoleDehumidifierHumidifier(hass, name, client)],
         True,
     )
 
@@ -75,11 +75,10 @@ class MedoleDehumidifierHumidifier(HumidifierEntity):
     _attr_min_humidity = MIN_HUMIDITY
     _attr_max_humidity = MAX_HUMIDITY
 
-    def __init__(self, hass, name, client, slave_id):
+    def __init__(self, hass, name, client):
         """Initialize the humidifier device."""
         self.hass = hass
         self._client = client
-        self._slave_id = slave_id
         self._attr_unique_id = f"{name}_humidifier"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self._attr_unique_id)},
@@ -118,9 +117,7 @@ class MedoleDehumidifierHumidifier(HumidifierEntity):
     async def async_update(self) -> None:
         """Update the state of the humidifier device."""
         # Get power status
-        power_result = await async_read_register(
-            self.hass, self._client, REG_POWER, self._slave_id
-        )
+        power_result = await self._client.async_read_register(REG_POWER)
         if power_result:
             power_status = power_result.registers[0]
             self._attr_is_on = power_status == 1
@@ -129,8 +126,8 @@ class MedoleDehumidifierHumidifier(HumidifierEntity):
             return
 
         # Get the operation status register
-        status_result = await async_read_register(
-            self.hass, self._client, REG_OPERATION_STATUS, self._slave_id
+        status_result = await self._client.async_read_register(
+            REG_OPERATION_STATUS
         )
 
         if status_result:
@@ -151,8 +148,8 @@ class MedoleDehumidifierHumidifier(HumidifierEntity):
             _LOGGER.error("Failed to read operation status")
 
         # Get the humidity setpoint
-        setpoint_result = await async_read_register(
-            self.hass, self._client, REG_HUMIDITY_SETPOINT, self._slave_id
+        setpoint_result = await self._client.async_read_register(
+            REG_HUMIDITY_SETPOINT
         )
 
         if setpoint_result:
@@ -166,9 +163,7 @@ class MedoleDehumidifierHumidifier(HumidifierEntity):
             _LOGGER.error("Failed to read humidity setpoint")
 
         # Get the fan speed
-        fan_speed_result = await async_read_register(
-            self.hass, self._client, REG_FAN_SPEED, self._slave_id
-        )
+        fan_speed_result = await self._client.async_read_register(REG_FAN_SPEED)
 
         if fan_speed_result:
             fan_speed = fan_speed_result.registers[0]
@@ -177,9 +172,7 @@ class MedoleDehumidifierHumidifier(HumidifierEntity):
             _LOGGER.error("Failed to read fan speed")
 
         # Get the current humidity
-        humidity_result = await async_read_register(
-            self.hass, self._client, REG_HUMIDITY_1, self._slave_id
-        )
+        humidity_result = await self._client.async_read_register(REG_HUMIDITY_1)
 
         if humidity_result:
             self._attr_current_humidity = humidity_result.registers[0]
@@ -190,8 +183,8 @@ class MedoleDehumidifierHumidifier(HumidifierEntity):
         """Set new mode."""
         fan_speed = REVERSE_MODES.get(mode, FAN_SPEED_MEDIUM)
 
-        success = await async_write_register(
-            self.hass, self._client, REG_FAN_SPEED, fan_speed, self._slave_id
+        success = await self._client.async_write_register(
+            REG_FAN_SPEED, fan_speed
         )
 
         if success:
@@ -204,12 +197,8 @@ class MedoleDehumidifierHumidifier(HumidifierEntity):
         # Ensure humidity is within valid range
         humidity = max(MIN_HUMIDITY, min(MAX_HUMIDITY, humidity))
 
-        success = await async_write_register(
-            self.hass,
-            self._client,
-            REG_HUMIDITY_SETPOINT,
-            humidity,
-            self._slave_id,
+        success = await self._client.async_write_register(
+            REG_HUMIDITY_SETPOINT, humidity
         )
 
         if success:
@@ -220,32 +209,24 @@ class MedoleDehumidifierHumidifier(HumidifierEntity):
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the device on."""
         # Set the power on
-        result = await async_write_register(
-            self.hass, self._client, REG_POWER, 1, self._slave_id
-        )
+        result = await self._client.async_write_register(REG_POWER, 1)
         if not result:
             _LOGGER.error("Failed to turn on device")
 
         # Set dehumidify mode on
-        result = await async_write_register(
-            self.hass, self._client, REG_DEHUMIDIFY_MODE, 1, self._slave_id
-        )
+        result = await self._client.async_write_register(REG_DEHUMIDIFY_MODE, 1)
         if not result:
             _LOGGER.error("Failed to turn on dehumidify mode")
 
         # Set purify mode off
-        result = await async_write_register(
-            self.hass, self._client, REG_PURIFY_MODE, 0, self._slave_id
-        )
+        result = await self._client.async_write_register(REG_PURIFY_MODE, 0)
 
         self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         # Set power off
-        success = await async_write_register(
-            self.hass, self._client, REG_POWER, 0, self._slave_id
-        )
+        success = await self._client.async_write_register(REG_POWER, 0)
 
         if success:
             self._attr_is_on = False

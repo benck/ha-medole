@@ -1,6 +1,6 @@
-# Medole Dehumidifier Integration for Home Assistant
+# Medole Dehumidifier (米多力除溼機) Integration for Home Assistant
 
-This is a custom component for Home Assistant that integrates Medole Dehumidifier devices via Modbus (serial or TCP).
+This is a custom component for Home Assistant that integrates Medole Dehumidifier devices via Modbus (serial or TCP). You need to connect a RS485 to Ethernet/Wi-Fi converter to the RS485 port of the Medole Dehumidifier.
 
 ## Features
 

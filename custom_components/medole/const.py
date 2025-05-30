@@ -3,6 +3,7 @@
 DOMAIN = "medole"
 
 # Configuration
+CONF_NAME = "name"
 CONF_SLAVE_ID = "slave_id"
 CONF_PORT = "port"
 CONF_BAUDRATE = "baudrate"

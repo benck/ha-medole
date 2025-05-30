@@ -25,7 +25,7 @@ use_parentheses = true
 ensure_newline_before_comments = true
 
 [tool.ruff]
-select = [
+lint.select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
     "F",  # pyflakes
@@ -33,12 +33,14 @@ select = [
     "C",  # flake8-comprehensions
     "B",  # flake8-bugbear
 ]
-ignore = [
+lint.ignore = [
     "E501",  # line too long, handled by black
     "C901",  # too complex
 ]
 target-version = "py311"
-line-length = 100
+line-length = 80
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["custom_components"]
+split-on-trailing-comma = true
+combine-as-imports = false

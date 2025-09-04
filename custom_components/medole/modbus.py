@@ -136,7 +136,7 @@ class MedoleModbusClient:
 
                 result = await self.hass.async_add_executor_job(
                     lambda: self.client.read_holding_registers(
-                        address, count=count, slave=self.slave_id
+                        address, count=count, unit=self.slave_id
                     )
                 )
 
